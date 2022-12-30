@@ -12,20 +12,22 @@
       <div class="container mt-5">
         <div class="row">
           <div class="col-12 col-md-4 offset-md-4 text-center">
-            <video id="camera" playsinline autoplay style="width: 480px;"></video>     
+            <video id="camera" playsinline autoplay style="width: 480px;"></video>
           </div>
         </div>
       </div>
     </main>
 
     <script type="text/javascript">
-      var model = tf.loadLayersModel('models/modelConv.json');
+      const EMOTIONS = ['happy', 'neutral', 'sad', 'surprise']
+      async function main() {
+      const model = await tf.loadLayersModel('models/modelConv.json');
       var camera = document.getElementById("camera");
 
       var camera_options = {
         audio: false,
         video: {
-          width: 480, height: 480,
+          width: 48, height: 48,
           facingMode: "user"
         },
       };
@@ -36,10 +38,19 @@
         });
 
       setInterval(async function() {
-        console.log(model)
-        const image = tf.browser.fromPixels(camera);
+        const image = tf.browser.fromPixels(camera)
+          .mean(2)
+          .toFloat()
+          .div(255)
+          .expandDims(-1)
+          .reshape([-1, 48, 48, 1])
+        pred = model.predict(image)
+        a = Array.from(pred.dataSync())
+        let i = a.indexOf(Math.max(...a));
+        console.log(EMOTIONS[i])
       }, 1000);
-        
+      }
+      main();
     </script>
   </body>
 </html>
