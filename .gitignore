@@ -1,0 +1,16 @@
+# Generated logs during tf trainings
+ai/logs
+
+# Downloaded from https://www.kaggle.com/datasets/msambare/fer2013
+ai/dataset
+
+# Generated models after running the notebook (h5)
+# ai/models
+
+# Direnv file
+.envrc
+# Python venv
+env
+venv
+# macOS crap
+.DS_Store
