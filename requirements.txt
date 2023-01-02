@@ -1,0 +1,9 @@
+wheel
+jupyter
+numpy
+pandas
+scikit-learn
+tensorflow-macos
+tensorflow-metal
+Pillow
+matplotlib
