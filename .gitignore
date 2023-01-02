@@ -7,6 +7,9 @@ ai/dataset
 # Generated models after running the notebook (h5)
 # ai/models
 
+# all checkpoiint files
+.ipynb_checkpoints
+
 # Direnv file
 .envrc
 # Python venv
