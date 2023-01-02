@@ -15,14 +15,20 @@
             <video id="camera" playsinline autoplay style="width: 480px;"></video>
           </div>
         </div>
+        <div class="row">
+          <div class="col-12 col-md-4 offset-md-4 text-center">
+            <span id="lastOutput"></span>
+          </div>
+        </div>
       </div>
     </main>
 
     <script type="text/javascript">
       const EMOTIONS = ['happy', 'neutral', 'sad', 'surprise']
       async function main() {
-      const model = await tf.loadLayersModel('models/modelConv.json');
+      const model = await tf.loadLayersModel('models/modelConv/modelConv.json');
       var camera = document.getElementById("camera");
+      var spanOut = document.getElementById("lastOutput");
 
       var camera_options = {
         audio: false,
@@ -48,6 +54,7 @@
         a = Array.from(pred.dataSync())
         let i = a.indexOf(Math.max(...a));
         console.log(EMOTIONS[i])
+        spanOut.innerHTML = EMOTIONS[i]
       }, 1000);
       }
       main();
