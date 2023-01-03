@@ -12,7 +12,7 @@
       <div class="container mt-5">
         <div class="row">
           <div class="col-12 col-md-4 offset-md-4 text-center">
-            <video id="camera" playsinline autoplay style="width: 480px;"></video>
+            <canvas id="output"></canvas>
           </div>
         </div>
         <div class="row">
@@ -24,38 +24,78 @@
     </main>
 
     <script type="text/javascript">
-      const EMOTIONS = ['happy', 'neutral', 'sad', 'surprise']
+      const EMOTIONS = [
+        //'angry',
+        //'disgust',
+        //'fear',
+        'happy', 
+        'neutral', 
+        'sad', 
+        'surprise'
+      ]
       async function main() {
-      const model = await tf.loadLayersModel('models/modelConv/modelConv.json');
-      var camera = document.getElementById("camera");
-      var spanOut = document.getElementById("lastOutput");
+        const model = await tf.loadLayersModel('models/modelConv/modelConv.json');
 
-      var camera_options = {
-        audio: false,
-        video: {
-          width: 48, height: 48,
-          facingMode: "user"
-        },
-      };
+        //const camera = document.getElementById("camera");
+        const canvas = document.getElementById("output");
+        const context = canvas.getContext("2d");
 
-      navigator.mediaDevices.getUserMedia(camera_options)
-        .then(function(stream) {
-          camera.srcObject = stream;
-        });
+        const spanOut = document.getElementById("lastOutput");
 
-      setInterval(async function() {
-        const image = tf.browser.fromPixels(camera)
-          .mean(2)
-          .toFloat()
-          .div(255)
-          .expandDims(-1)
-          .reshape([-1, 48, 48, 1])
-        pred = model.predict(image)
-        a = Array.from(pred.dataSync())
-        let i = a.indexOf(Math.max(...a));
-        console.log(EMOTIONS[i])
-        spanOut.innerHTML = EMOTIONS[i]
-      }, 1000);
+        var facedetector_options = {
+          fastMode: true
+        };
+
+        var camera_options = {
+          audio: false,
+          video: {
+            width: 480, height: 480,
+            facingMode: "user"
+          },
+        };
+
+        const faceDetector = new FaceDetector(facedetector_options);
+        const mediaStream = await navigator.mediaDevices.getUserMedia(camera_options)
+  
+        const camera = document.createElement("video");
+        camera.srcObject = mediaStream;
+        camera.autoplay = true;
+        camera.onloadedmetadata = () => {
+          canvas.width = camera.videoWidth;
+          canvas.height = camera.videoHeight;
+        };
+
+        setInterval(async function() {
+          faceDetector
+          .detect(camera)
+          .then((faces) => {
+            console.log(faces)
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.drawImage(camera, 0, 0, camera.videoWidth, camera.videoHeight);
+            context.strokeStyle = "#FFFF00";
+            context.lineWidth = 5;
+            faces.forEach((face) => {
+              const { top, left, width, height } = face.boundingBox;
+              context.beginPath();
+              context.rect(left, top, width, height);
+              context.stroke();
+            })
+          })
+          
+          /*
+          const image = tf.browser.fromPixels(camera)
+            .mean(2)
+            .toFloat()
+            .div(255)
+            .expandDims(-1)
+            .reshape([-1, 48, 48, 1])
+          pred = model.predict(image)
+          a = Array.from(pred.dataSync())
+          let i = a.indexOf(Math.max(...a));
+          console.log(EMOTIONS[i])
+          spanOut.innerHTML = EMOTIONS[i]
+          */
+        }, 100);
       }
       main();
     </script>
