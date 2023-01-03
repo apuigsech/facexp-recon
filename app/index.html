@@ -38,7 +38,7 @@
 
         //const camera = document.getElementById("camera");
         const canvas = document.getElementById("output");
-        const context = canvas.getContext("2d");
+        const canvas_ctx = canvas.getContext("2d");
 
         const spanOut = document.getElementById("lastOutput");
 
@@ -69,35 +69,28 @@
           faceDetector
           .detect(camera)
           .then((faces) => {
-            context.clearRect(0, 0, canvas.width, canvas.height);
-            context.drawImage(camera, 0, 0, camera.videoWidth, camera.videoHeight);
+            canvas_ctx.clearRect(0, 0, canvas.width, canvas.height);
+            canvas_ctx.drawImage(camera, 0, 0, camera.videoWidth, camera.videoHeight);
 
-            context.strokeStyle = "#FFFF00";
-            context.lineWidth = 5;
+            canvas_ctx.strokeStyle = "#FFFF00";
+            canvas_ctx.lineWidth = 5;
+            canvas_ctx.font = "30px Arial";
+            canvas_ctx.fillStyle = "#FFFF00";
+
             faces.forEach((face) => {
               const { top, left, width, height } = face.boundingBox;
+  
+              canvas_ctx.beginPath();
+              canvas_ctx.rect(left, top, width, height);
+              canvas_ctx.stroke();
 
-              console.log("Face in", top, left, width, height)
+              const canvas_face = document.createElement("canvas");
+              canvas_face.width = 48
+              canvas_face.height = 48
+              const canvas_face_ctx = canvas.getContext("2d");
+              canvas_face_ctx.drawImage(canvas, left, top, width, height, 0, 0, 48, 48)
 
-              context.beginPath();
-              context.rect(left, top, width, height);
-              context.stroke();
-  /*
-              const crop = document.createElement("canvas");
-              crop.width = 48
-              crop.height = 48
-              const crop_ctx = canvas.getContext("2d");
-
-              crop_ctx.drawImage(canvas, left, top, width, height, 0, 0, 48, 48)
-              console.log(crop)
-*/
-              //imgData = crop_ctx.getImageData(0, 0, crop.width, crop.height)
-
-              imgData = context.getImageData(left, top, height, width)
-
-              context.putImageData(imgData, 10, 10);
-
-              const image = tf.browser.fromPixels(crop_ctx.getImageData(0, 0, crop.width, crop.height))
+              const image = tf.browser.fromPixels(canvas_face_ctx.getImageData(0, 0, canvas_face.width, canvas_face.height))
                 .mean(2)
                 .toFloat()
                 .div(255)
@@ -109,9 +102,8 @@
               pred = model.predict(image) 
               a = Array.from(pred.dataSync())
               let i = a.indexOf(Math.max(...a));
-              context.font = "30px Arial";
-              context.fillStyle = "#FFFF00";
-              context.fillText(EMOTIONS[i], left+30, top-10);
+
+              canvas_ctx.fillText(EMOTIONS[i], left+30, top-10);
             })
           })
 
