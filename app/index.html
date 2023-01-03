@@ -69,32 +69,52 @@
           faceDetector
           .detect(camera)
           .then((faces) => {
-            console.log(faces)
             context.clearRect(0, 0, canvas.width, canvas.height);
             context.drawImage(camera, 0, 0, camera.videoWidth, camera.videoHeight);
+
             context.strokeStyle = "#FFFF00";
             context.lineWidth = 5;
             faces.forEach((face) => {
               const { top, left, width, height } = face.boundingBox;
+
+              console.log("Face in", top, left, width, height)
+
               context.beginPath();
               context.rect(left, top, width, height);
               context.stroke();
+  /*
+              const crop = document.createElement("canvas");
+              crop.width = 48
+              crop.height = 48
+              const crop_ctx = canvas.getContext("2d");
+
+              crop_ctx.drawImage(canvas, left, top, width, height, 0, 0, 48, 48)
+              console.log(crop)
+*/
+              //imgData = crop_ctx.getImageData(0, 0, crop.width, crop.height)
+
+              imgData = context.getImageData(left, top, height, width)
+
+              context.putImageData(imgData, 10, 10);
+
+              const image = tf.browser.fromPixels(crop_ctx.getImageData(0, 0, crop.width, crop.height))
+                .mean(2)
+                .toFloat()
+                .div(255)
+                .expandDims(-1)
+                .reshape([-1, 48, 48, 1])
+
+              tf.print(image)
+              
+              pred = model.predict(image) 
+              a = Array.from(pred.dataSync())
+              let i = a.indexOf(Math.max(...a));
+              context.font = "30px Arial";
+              context.fillStyle = "#FFFF00";
+              context.fillText(EMOTIONS[i], left+30, top-10);
             })
           })
-          
-          /*
-          const image = tf.browser.fromPixels(camera)
-            .mean(2)
-            .toFloat()
-            .div(255)
-            .expandDims(-1)
-            .reshape([-1, 48, 48, 1])
-          pred = model.predict(image)
-          a = Array.from(pred.dataSync())
-          let i = a.indexOf(Math.max(...a));
-          console.log(EMOTIONS[i])
-          spanOut.innerHTML = EMOTIONS[i]
-          */
+
         }, 100);
       }
       main();
