@@ -15,11 +15,6 @@
             <canvas id="output"></canvas>
           </div>
         </div>
-        <div class="row">
-          <div class="col-12 col-md-4 offset-md-4 text-center">
-            <span id="lastOutput"></span>
-          </div>
-        </div>
       </div>
     </main>
 
@@ -36,11 +31,8 @@
       async function main() {
         const model = await tf.loadLayersModel('models/modelConv/modelConv.json');
 
-        //const camera = document.getElementById("camera");
         const canvas = document.getElementById("output");
-        const canvas_ctx = canvas.getContext("2d");
-
-        const spanOut = document.getElementById("lastOutput");
+        const canvas_ctx = canvas.getContext("2d", { willReadFrequently: true });
 
         var facedetector_options = {
           fastMode: true
@@ -60,6 +52,7 @@
         const camera = document.createElement("video");
         camera.srcObject = mediaStream;
         camera.autoplay = true;
+
         camera.onloadedmetadata = () => {
           canvas.width = camera.videoWidth;
           canvas.height = camera.videoHeight;
@@ -84,11 +77,9 @@
               canvas_ctx.rect(left, top, width, height);
               canvas_ctx.stroke();
 
-              const canvas_face = document.createElement("canvas");
-              canvas_face.width = 48
-              canvas_face.height = 48
-              const canvas_face_ctx = canvas.getContext("2d");
-              canvas_face_ctx.drawImage(canvas, left, top, width, height, 0, 0, 48, 48)
+              const canvas_face = new OffscreenCanvas(48, 48);
+              const canvas_face_ctx = canvas_face.getContext("2d");
+              canvas_face_ctx.drawImage(canvas, left, top, width, height, 0, 0, 48, 48);
 
               const image = tf.browser.fromPixels(canvas_face_ctx.getImageData(0, 0, canvas_face.width, canvas_face.height))
                 .mean(2)
@@ -96,9 +87,7 @@
                 .div(255)
                 .expandDims(-1)
                 .reshape([-1, 48, 48, 1])
-
-              tf.print(image)
-              
+          
               pred = model.predict(image) 
               a = Array.from(pred.dataSync())
               let i = a.indexOf(Math.max(...a));
